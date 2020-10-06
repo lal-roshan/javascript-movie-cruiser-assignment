@@ -1,3 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@700&display=swap');
+
 body {
-	margin: 0;
+    margin: 0;
+    min-width: 160px;
+}
+
+header{
+    height: 15vh;
+    color:gainsboro;
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+ul u{
+    font-size: large;
 }
