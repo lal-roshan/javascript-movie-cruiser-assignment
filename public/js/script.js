@@ -3,11 +3,12 @@
 function getMovies() {
     let moviesPromise = fetch('http://localhost:3000/movies');
 
-    moviesPromise.then((data) => {
+    return moviesPromise.then((data) => {
         return data.json();
     })
     .then((response) => {
         let ul = document.getElementById('moviesList');
+        ul.innerHTML = '';
         if ([...response].length > 0) {
             response.forEach(element => {
                 ul.innerHTML = ul.innerHTML + listItem(element, 'movie');
@@ -16,10 +17,12 @@ function getMovies() {
         else {
             ul.innerHTML = ul.innerHTML + nolistItem();
         }
+        return response;
     })
     .catch((error) => {
         console.log(error);
-        console.log('Failed to Process Request !!!');
+        error.message = 'Dummy error from server';
+        return error;
     });
 
 }
@@ -27,11 +30,12 @@ function getMovies() {
 function getFavourites() {
     let favouritesPromise = fetch('http://localhost:3000/favourites');
 
-    favouritesPromise.then((data) => {
+    return favouritesPromise.then((data) => {
         return data.json();
     })
     .then((response) => {
         let ul = document.getElementById('favouritesList');
+        ul.innerHTML = '';
         if([...response].length > 0){
             response.forEach(element => {
                 ul.innerHTML = ul.innerHTML + listItem(element);
@@ -40,44 +44,110 @@ function getFavourites() {
         else{
             ul.innerHTML = ul.innerHTML + nolistItem();
         }
+        return response;
     })
     .catch((err) => {
         console.log(err);
-        console.log('Failed to Process Request !!!');
+        error.message = 'Dummy error from server';
+        return error;
     });
 }
 
 function addFavourite(id) {
-    let moviePromise = fetch('http://localhost:3000/movies/' + id);
 
-    moviePromise.then((data) => {
-        return data.json();
-    })
-    .then((response) => {
+    let movieItem = document.querySelector('#moviesList [data-movieId=\'' + id + '\']');
+
+    // alert(movieItem.innerHTML);
+
+    if(movieItem){
+        let voteCount = movieItem.querySelector('.restDetails .voteCount').innerText;
+        let video = movieItem.querySelector('.restDetails .video').innerText;
+        let voteAverage = movieItem.querySelector('.restDetails .voteAverage').innerText;
+        let title = movieItem.querySelector('.title').innerText;
+        let popularity = movieItem.querySelector('.restDetails .popularity').innerText;
+        let posterPath = movieItem.querySelector('.restDetails .posterPath').innerText;
+        let originalLanguage = movieItem.querySelector('.originalLanguage').innerText;
+        originalLanguage = originalLanguage.slice(1, originalLanguage.length - 1);
+        let originalTitle = movieItem.querySelector('.originalTitle').innerText;
+        let adult = movieItem.querySelector('.restDetails .adult').innerText;
+        let overview = movieItem.querySelector('.overview').innerText;
+        let releaseDate = movieItem.querySelector('.releaseDate').innerText;
+
+        let movie = {
+            voteCount: voteCount,
+            id: id,
+            video: video,
+            voteAverage: voteAverage,
+            title: title,
+            popularity: popularity,
+            posterPath: posterPath,
+            originalLanguage: originalLanguage,
+            originalTitle: originalTitle,
+            adult: adult,
+            overview: overview,
+            releaseDate: releaseDate,
+        }
+
+        let jsonMovie = JSON.stringify(movie);
         let addPromise = fetch('http://localhost:3000/favourites', {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
             },
-            body: JSON.stringify(response)
+            body: movie
         });
 
-        addPromise.then(() => {
+        return addPromise.then((response) => {
+            console.log('then');
+            console.log(response.statusText);
+            if(response.status === 400){
+                console.log('Movie is already added to favourites');
+                return Promise.reject('Movie is already added to favourites');
+            }
             getFavourites();
+            return jsonMovie;
         }).
         catch((error) => {
-            console.log(error);
-            console.log('Failed to Add New Employee Record')
+            console.log('catch');
+            error.message = 'Dummy error from server';
+            return error;
         });
+    }
 
-    });
+    // return moviePromise.then((data) => {
+    //     return data.json();
+    // })
+    // .then((response) => {
+    //     let addPromise = fetch('http://localhost:3000/favourites', {
+    //         method: 'POST',
+    //         headers: {
+    //             'content-type': 'application/json'
+    //         },
+    //         body: JSON.stringify(response)
+    //     });
+
+    //     addPromise.then(() => {
+    //         getFavourites();
+    //         return response;
+    //     }).
+    //     catch((error) => {
+    //         console.log(error);
+    //         console.log('Failed to Add New Employee Record')
+    //         return null;
+    //     });
+
+    // }).
+    // catch((err) => {
+    //     return null;
+    // });
 }
 
 function listItem(element, movie) {
-    let elem = '<li class=\'list-group-item\''
+    let elem = '<li class="list-group-item" data-movieId=\''+ element.id +'\'>'
         + listItemId(element.id)
         + listItemTitle(element.title, element.originalTitle, element.originalLanguage, element.releaseDate)
-        + listItemOverview(element.overview);
+        + listItemOverview(element.overview)
+        + addRest(element);
     if (movie === 'movie') {
         elem = elem + addToFavButton(element.id);
     }
@@ -86,30 +156,30 @@ function listItem(element, movie) {
 }
 
 function listItemId(id) {
-    return '<p>#' + id + '</p>';
+    return '<p class="id">#' + id + '</p>';
 }
 
 function listItemTitle(title, originalTitle, originalLanguage, releaseDate) {
     return '<blockquote class="blockquote">'
-        + '<p class="lead text-capitalize font-weight-bold mb-0">' + title + '</p>'
+        + '<p class="lead text-capitalize font-weight-bold mb-0 title">' + title + '</p>'
         + listItemOriginalInfo(originalTitle, originalLanguage) 
         + listItemReleaseDate(releaseDate)
         + '</blockquote>';
 }
 
 function listItemOriginalInfo(originalTitle, originalLanguage) {
-    return '<small class="text-muted d-inline-flex flex-wrap">' + originalTitle 
-        + '<div class="text-uppercase ml-sm-1"> (' + originalLanguage + ') </div>'
-    + '</small>';
+    return '<small class="text-muted d-inline-flex flex-wrap originalTitle">' + originalTitle
+        + '</small>'
+        + '<small class="text-muted text-uppercase ml-sm-1 originalLanguage">(' + originalLanguage + ')</small>';
 }
 
 function listItemReleaseDate(releaseDate) {
-    return '<footer class="blockquote-footer flex-wrap d-flex">' + releaseDate + '</footer>';
+    return '<footer class="blockquote-footer flex-wrap d-flex releaseDate">' + releaseDate + '</footer>';
 }
 
 function listItemOverview(overview) {
     return '<p><u>Overview</u></p>'
-    + '<p class=\'d-flex flex-wrap w-100\'>' + overview + '</p>';
+    + '<p class=\'d-flex flex-wrap w-100 overview\'>' + overview + '</p>';
 }
 
 function nolistItem() {
@@ -121,6 +191,18 @@ function addToFavButton(id) {
         + '<button class=\'btn btn-primary\' onclick=addFavourite(' + id + ')>Add To Favourites</button>'
         + '</div>';
 }
+
+function addRest(element){
+    return `<div class="d-none restDetails">
+                <p class="voteCount">` + element.voteCount + `</p>
+                <p class="video">` + element.video + `</p>
+                <p class="voteAverage">` + element.voteAverage + `</p>
+                <p class="popularity">` + element.popularity + `</p>
+                <p class="posterPath">` + element.posterPath + `</p>
+                <p class="adult">` + element.adult + `</p>
+            </div>`;
+}
+
 module.exports = {
     getMovies,
     getFavourites,

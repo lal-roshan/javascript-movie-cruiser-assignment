@@ -43,5 +43,20 @@
       "releaseDate": "2012-01-01"
     }
   ],
-  "favourites": []
+  "favourites": [
+    {
+      "voteCount": "0",
+      "id": 142109,
+      "video": "false",
+      "voteAverage": "0",
+      "title": "Unique 8",
+      "popularity": "1.007201",
+      "posterPath": "../images/Unique_8.jpg",
+      "originalLanguage": "EN",
+      "originalTitle": "Unique 8",
+      "adult": "false",
+      "overview": "We are back with our new 2012 snowboard film release, UNIQUE 8!",
+      "releaseDate": "2012-01-01"
+    }
+  ]
 }
