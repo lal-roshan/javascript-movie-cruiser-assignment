@@ -1,4 +1,6 @@
 // const DOMops = require('DOMops.js');
+let favouritesArray = [];
+let moviesArray = [];
 
 function getMovies() {
     let moviesPromise = fetch('http://localhost:3000/movies');
@@ -7,16 +9,8 @@ function getMovies() {
         return data.json();
     })
     .then((response) => {
-        let ul = document.getElementById('moviesList');
-        ul.innerHTML = '';
-        if ([...response].length > 0) {
-            response.forEach(element => {
-                ul.innerHTML = ul.innerHTML + listItem(element, 'movie');
-            });
-        }
-        else {
-            ul.innerHTML = ul.innerHTML + nolistItem();
-        }
+        moviesArray = [...response];
+        addListUI('movie');
         return response;
     })
     .catch((error) => {
@@ -34,124 +28,90 @@ function getFavourites() {
         return data.json();
     })
     .then((response) => {
-        let ul = document.getElementById('favouritesList');
-        ul.innerHTML = '';
-        if([...response].length > 0){
-            response.forEach(element => {
-                ul.innerHTML = ul.innerHTML + listItem(element);
-            });
-        }
-        else{
-            ul.innerHTML = ul.innerHTML + nolistItem();
-        }
+        favouritesArray = [...response];
+        addListUI('favourites');
         return response;
     })
     .catch((err) => {
         console.log(err);
         error.message = 'Dummy error from server';
-        return error;
+        return err;
     });
 }
 
 function addFavourite(id) {
+    if(favouritesArray && favouritesArray.find(movie => movie.id === id)){
+        alert('Movie is already added to favourites');
+        throw new Error('Movie is already added to favourites');
+    }
+    else{
+        let favMovie = moviesArray.find(movie => movie.id === id);
 
-    let movieItem = document.querySelector('#moviesList [data-movieId=\'' + id + '\']');
+        if(favMovie){
+            let addFavPromise = fetch('http://localhost:3000/favourites',{
+                method: 'POST',
+                headers:{
+                    'Content-type': "application/json"
+                },
+                body: JSON.stringify(favMovie)
+            });
 
-    // alert(movieItem.innerHTML);
-
-    if(movieItem){
-        let voteCount = movieItem.querySelector('.restDetails .voteCount').innerText;
-        let video = movieItem.querySelector('.restDetails .video').innerText;
-        let voteAverage = movieItem.querySelector('.restDetails .voteAverage').innerText;
-        let title = movieItem.querySelector('.title').innerText;
-        let popularity = movieItem.querySelector('.restDetails .popularity').innerText;
-        let posterPath = movieItem.querySelector('.restDetails .posterPath').innerText;
-        let originalLanguage = movieItem.querySelector('.originalLanguage').innerText;
-        originalLanguage = originalLanguage.slice(1, originalLanguage.length - 1);
-        let originalTitle = movieItem.querySelector('.originalTitle').innerText;
-        let adult = movieItem.querySelector('.restDetails .adult').innerText;
-        let overview = movieItem.querySelector('.overview').innerText;
-        let releaseDate = movieItem.querySelector('.releaseDate').innerText;
-
-        let movie = {
-            voteCount: voteCount,
-            id: id,
-            video: video,
-            voteAverage: voteAverage,
-            title: title,
-            popularity: popularity,
-            posterPath: posterPath,
-            originalLanguage: originalLanguage,
-            originalTitle: originalTitle,
-            adult: adult,
-            overview: overview,
-            releaseDate: releaseDate,
+            return addFavPromise.then((data) => {
+                return data.json();
+            })
+            .then((response) => {
+                favouritesArray.push(response);
+                addListUI('favourites', append = true);
+                return favouritesArray;
+            })
+            .catch((err) => {
+                return err;
+            });
         }
-
-        let jsonMovie = JSON.stringify(movie);
-        let addPromise = fetch('http://localhost:3000/favourites', {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: movie
-        });
-
-        return addPromise.then((response) => {
-            console.log('then');
-            console.log(response.statusText);
-            if(response.status === 400){
-                console.log('Movie is already added to favourites');
-                return Promise.reject('Movie is already added to favourites');
-            }
-            getFavourites();
-            return jsonMovie;
-        }).
-        catch((error) => {
-            console.log('catch');
-            error.message = 'Dummy error from server';
-            return error;
+    }
+}
+//#region DOM part
+function addListUI(category, append = false){
+    let ul;
+    let items = [];
+    if(category === 'movie'){
+        ul = document.getElementById('moviesList');
+        items = moviesArray;
+    }
+    else{
+        ul = document.getElementById('favouritesList');
+        items = favouritesArray;
+    }
+    if(append){
+        ul.innerHTML = '';
+    }
+    if (items.length > 0) {
+        items.forEach(element => {
+            let li = document.createElement('li');
+            li.classList.add('list-group-item');
+            li.innerHTML = listItem(element, category);
+            ul.appendChild(li);
         });
     }
-
-    // return moviePromise.then((data) => {
-    //     return data.json();
-    // })
-    // .then((response) => {
-    //     let addPromise = fetch('http://localhost:3000/favourites', {
-    //         method: 'POST',
-    //         headers: {
-    //             'content-type': 'application/json'
-    //         },
-    //         body: JSON.stringify(response)
-    //     });
-
-    //     addPromise.then(() => {
-    //         getFavourites();
-    //         return response;
-    //     }).
-    //     catch((error) => {
-    //         console.log(error);
-    //         console.log('Failed to Add New Employee Record')
-    //         return null;
-    //     });
-
-    // }).
-    // catch((err) => {
-    //     return null;
-    // });
+    else {
+        let li = document.createElement('li');
+        li.classList.add('list-group-item');
+        li.textContent = 'No Items!!';
+        ul.appendChild(li);
+    }
 }
 
 function listItem(element, movie) {
-    let elem = '<li class="list-group-item" data-movieId=\''+ element.id +'\'>'
-        + listItemId(element.id)
+    let elem = 
+    // '<li class="list-group-item" data-movieId=\''+ element.id +'\'>' +
+     listItemId(element.id)
         + listItemTitle(element.title, element.originalTitle, element.originalLanguage, element.releaseDate)
         + listItemOverview(element.overview)
         + addRest(element);
     if (movie === 'movie') {
         elem = elem + addToFavButton(element.id);
     }
-    elem = elem + '</li>';
+    // elem = elem + '</li>';
     return elem;
 }
 
@@ -182,10 +142,6 @@ function listItemOverview(overview) {
     + '<p class=\'d-flex flex-wrap w-100 overview\'>' + overview + '</p>';
 }
 
-function nolistItem() {
-    return '<li class=\'list-group-item\'>No Items</li>';
-}
-
 function addToFavButton(id) {
     return '<div class=\'w-100 d-flex justify-content-end\'>'
         + '<button class=\'btn btn-primary\' onclick=addFavourite(' + id + ')>Add To Favourites</button>'
@@ -202,6 +158,7 @@ function addRest(element){
                 <p class="adult">` + element.adult + `</p>
             </div>`;
 }
+//#endregion
 
 module.exports = {
     getMovies,
