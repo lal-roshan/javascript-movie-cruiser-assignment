@@ -151,7 +151,7 @@ function listItem(element, category) {
     let elem = listItemId(element.id)
         + listItemTitle(element.title, element.originalTitle, element.originalLanguage, element.releaseDate)
         + listItemOverview(element.overview)
-        + listItemfooter(element, category);
+        + listItemFooter(element, category);
     return elem;
 }
 
@@ -178,10 +178,10 @@ function listItemTitle(title, originalTitle, originalLanguage, releaseDate) {
 //<param name="orignalTitle">The original title of the movie</param>
 //<param name="orignalLanguage">The original language of the movie</param>
 function listItemOriginalInfo(originalTitle, originalLanguage) {
-    return `<small class="text-muted d-inline-flex flex-wrap originalTitle">`
+    return `<small class="text-muted d-inline-flex flex-wrap originalTitle" title="Original Title">`
                 + originalTitle +
             `</small>
-            <small class="text-muted text-uppercase ml-sm-1 originalLanguage">(`
+            <small class="text-muted text-uppercase ml-sm-1 originalLanguage" title="Original Language">(`
                 + originalLanguage +
             `)</small>`;
 }
@@ -189,7 +189,7 @@ function listItemOriginalInfo(originalTitle, originalLanguage) {
 //Method for creating view for release date of movie
 //<param name="releaseDate">The release date of the movie</param>
 function listItemReleaseDate(releaseDate) {
-    return '<footer class="blockquote-footer flex-wrap d-flex releaseDate">'
+    return '<footer class="blockquote-footer flex-wrap d-flex releaseDate" title="Release Date">'
                 + releaseDate +
             '</footer>';
 }
@@ -203,48 +203,75 @@ function listItemOverview(overview) {
             `</p>`;
 }
 
-function listItemfooter(element){
-    // let footer =  `<div class="container-fluid">
-    //                     <div class="row">
-    //                         <div class="col-12 col-md-6">`
-    //                             + addFooterLeftSection(element) +
-    //                         `</div>`;
-    // //if category is moview then we need to add the button for adding to favourite
-    // if (movie === 'movie') {
-    //     elem = elem + addToFavButton(element.id);
-    // }   
+//Method for creating view for informations to be shown in footer
+//<param name="element">Details of the movie</param>
+//<param name="category">Used to determine whether or not to add a button at the end of item</param>
+function listItemFooter(element, category){
+    let footer = `<hr class="mt-5"/>`
+                + addItemPopularity(element.popularity)
+                + addVotes(element.voteAverage, element.voteCount);
 
-    // footer = footer + `</div></div>`;
-    let footer = `<div class="movieFooter d-block d-md-flex">`
-                + addLeftFooterSection(element);
     //if category is moview then we need to add the button for adding to favourite
-    if (movie === 'movie') {
+    if (category === 'movie') {
         footer = footer + addToFavButton(element.id);
     }
-
-    footer += `</div>`;
     return footer;
-            
-    
 }
 
-//Method to create view for informations in the left side of footer of a movie detail
-//<param name="element">The details of the movie</param>
-function addLeftFooterSection(element){
-    return `<div class="d-block d-md-flex justify-content-start">`
-                + addItemPopularity(element.popularity) +
+//Method for creating view for showing the popularity of the movie
+//<param name="popularity">The popularity figure of the movie</param>
+function addItemPopularity(popularity) {
+    return `<div class="text-dark d-flex justify-content-start mb-3 w-100" title="Popularity">`
+                + popularity +
+            `<i class="fas fa-fire-alt d-flex text-hot ml-2 text-align-center"></i>
+            </div>`;
+}
+
+//Method for creating views for rating of the movie
+//<param name="voteAverage">Average votes of the movie</param>
+//<param name="voteCount">Number of votes for the movie</param>
+function addVotes(voteAverage, voteCount){
+    return `<div class="d-flex justify-content-start mb-3 w-100" title="Reviews">`
+                + addVoteAverage(voteAverage)
+                + addVoteCount(voteCount) +
             `</div>`;
 }
 
-function addItemPopularity(popularity){
-    
+//Method for creating view for star rating of the movie
+//<param name="voteAverage">Average votes of the movie</param>
+function addVoteAverage(voteAverage){
+    let rating = '<h5 class="mr-2">' + voteAverage.toFixed(2) +'</h5>';
+    let stars = '<div class="stars">';
+    let average = 1;
+    while (average <= 5){
+        if(voteAverage >= average)
+        {
+            stars += `<i class="fas fa-star checked"></i>`;
+        }
+        else if ((average - voteAverage) > 0 && (average - voteAverage) < 1){
+            stars += `<i class="fas fa-star-half-alt checked"></i>`;
+        }
+        else{
+            stars += `<i class="far fa-star"></i>`;
+        }
+        average++;
+    }
+    stars += `</div>`;
+    rating += stars;
+    return rating;
+}
+
+//Method for creating view for showing number of reviews of the movie
+//<param name="voteCount">Number of votes for the movie</param>
+function addVoteCount(voteCount) {
+    return `<div class="text-muted ml-1">(` + voteCount + `)</div>`;
 }
 
 //Method for creating the add to favourites button
 //<param name="id">The id of the movie</param>
 function addToFavButton(id) {
-    return `<div class="d-block d-md-flex justify-content-end">
-                <button class="btn btn-primary" onclick=addFavourite(` + id + `)>
+    return `<div class="d-flex justify-content-end my-4 w-100">
+                <button class="btn btn-dark" onclick=addFavourite(` + id + `)>
                     Add To Favourites
                 </button>
             </div>`;

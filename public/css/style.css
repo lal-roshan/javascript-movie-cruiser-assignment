@@ -14,3 +14,33 @@ header{
 ul u{
     font-size: large;
 }
+
+ul hr{
+    border-top: 1px solid whitesmoke;
+}
+
+i{
+    line-height: unset !important;
+}
+
+.text-hot{
+    color: #ff4800 !important;
+}
+
+.stars{
+    color:darkslategrey;
+    display: flex;
+    flex-direction: row;
+    text-align: end;
+    justify-content: center;
+    line-height: unset !important;
+}
+
+.stars{
+    color:orange;
+}
+
+.stars .half-checked{
+    width:1em;
+    height: 1em;
+}
