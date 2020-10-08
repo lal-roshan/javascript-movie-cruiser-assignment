@@ -62,6 +62,7 @@ function getFavourites() {
 }
 
 //Method to add an item from movie list to favourites list
+//<param name="id">Denotes the id of the movie that is to be added to favourites</param>
 function addFavourite(id) {
 
     //Validating whether the selected movie was already added as favourite
@@ -85,25 +86,32 @@ function addFavourite(id) {
                 body: JSON.stringify(favMovie)
             });
 
-            //First trying to post the movie item to favourites
-            return addFavPromise.then((data) => {
-                return data.json();
-            })
-            .then((response) => {
-                favouritesArray.push(response);
+            //First trying to post the movie item to favourites and adding it to view if successful
+            return addFavPromise.then(() => {
+                favouritesArray.push(favMovie);
                 addListUI('favourites', append = true);
                 return favouritesArray;
             })
+            //If any error occurs in between it will be handled here
             .catch((err) => {
                 return err;
             });
         }
     }
 }
+
+
 //#region DOM part
+
+//Method for adding the provided items to the view
+//<param name="category">Denotes whether it is a movie list or favourites list</param>
+//<param name="append">Denotes whether the item is to be appended to list or the list is
+// to be populated as a whole, by default it is false</param>
 function addListUI(category, append = false){
     let ul;
     let items = [];
+
+    //Select the UL element from the view based on category
     if(category === 'movie'){
         ul = document.getElementById('moviesList');
         items = moviesArray;
@@ -112,9 +120,13 @@ function addListUI(category, append = false){
         ul = document.getElementById('favouritesList');
         items = favouritesArray;
     }
-    if(append){
+
+    //If the item is not be appended then clear all items in the UL
+    if(!append){
         ul.innerHTML = '';
     }
+
+    //If there are items in the array then add each of them as List Items in view
     if (items.length > 0) {
         items.forEach(element => {
             let li = document.createElement('li');
@@ -123,6 +135,7 @@ function addListUI(category, append = false){
             ul.appendChild(li);
         });
     }
+    //If the array is empty add a List item with 'No Items!!' as content
     else {
         let li = document.createElement('li');
         li.classList.add('list-group-item');
@@ -131,24 +144,28 @@ function addListUI(category, append = false){
     }
 }
 
-function listItem(element, movie) {
-    let elem = 
-    // '<li class="list-group-item" data-movieId=\''+ element.id +'\'>' +
-     listItemId(element.id)
+//Method for populating the content of List items
+//<param name="element">Details of the movie item that is to be added to view</param>
+//<param name="category">Used to determine whether or not to add a button at the end of item</param>
+function listItem(element, category) {
+    let elem = listItemId(element.id)
         + listItemTitle(element.title, element.originalTitle, element.originalLanguage, element.releaseDate)
         + listItemOverview(element.overview)
-        + addRest(element);
-    if (movie === 'movie') {
-        elem = elem + addToFavButton(element.id);
-    }
-    // elem = elem + '</li>';
+        + listItemfooter(element, category);
     return elem;
 }
 
+//Method for creating view for ID
 function listItemId(id) {
     return '<p class="id">#' + id + '</p>';
 }
 
+//Method for creating view for Title , that contains The actual title, original title,
+//original language and release date of the movie
+//<param name="title">The title of the movie</param>
+//<param name="orignalTitle">The original title of the movie</param>
+//<param name="orignalLanguage">The original language of the movie</param>
+//<param name="releaseDate">The release date of the movie</param>
 function listItemTitle(title, originalTitle, originalLanguage, releaseDate) {
     return '<blockquote class="blockquote">'
         + '<p class="lead text-capitalize font-weight-bold mb-0 title">' + title + '</p>'
@@ -157,35 +174,79 @@ function listItemTitle(title, originalTitle, originalLanguage, releaseDate) {
         + '</blockquote>';
 }
 
+//Method for creating view for information related to original language and title of movie
+//<param name="orignalTitle">The original title of the movie</param>
+//<param name="orignalLanguage">The original language of the movie</param>
 function listItemOriginalInfo(originalTitle, originalLanguage) {
-    return '<small class="text-muted d-inline-flex flex-wrap originalTitle">' + originalTitle
-        + '</small>'
-        + '<small class="text-muted text-uppercase ml-sm-1 originalLanguage">(' + originalLanguage + ')</small>';
+    return `<small class="text-muted d-inline-flex flex-wrap originalTitle">`
+                + originalTitle +
+            `</small>
+            <small class="text-muted text-uppercase ml-sm-1 originalLanguage">(`
+                + originalLanguage +
+            `)</small>`;
 }
 
+//Method for creating view for release date of movie
+//<param name="releaseDate">The release date of the movie</param>
 function listItemReleaseDate(releaseDate) {
-    return '<footer class="blockquote-footer flex-wrap d-flex releaseDate">' + releaseDate + '</footer>';
+    return '<footer class="blockquote-footer flex-wrap d-flex releaseDate">'
+                + releaseDate +
+            '</footer>';
 }
 
+//Method for creating view for overview of movie
+//<param name="overview">The overview of the movie</param>
 function listItemOverview(overview) {
-    return '<p><u>Overview</u></p>'
-    + '<p class=\'d-flex flex-wrap w-100 overview\'>' + overview + '</p>';
+    return `<p><u>Overview</u></p>
+            <p class="d-flex flex-wrap w-100 overview">`
+                + overview +
+            `</p>`;
 }
 
+function listItemfooter(element){
+    // let footer =  `<div class="container-fluid">
+    //                     <div class="row">
+    //                         <div class="col-12 col-md-6">`
+    //                             + addFooterLeftSection(element) +
+    //                         `</div>`;
+    // //if category is moview then we need to add the button for adding to favourite
+    // if (movie === 'movie') {
+    //     elem = elem + addToFavButton(element.id);
+    // }   
+
+    // footer = footer + `</div></div>`;
+    let footer = `<div class="movieFooter d-block d-md-flex">`
+                + addLeftFooterSection(element);
+    //if category is moview then we need to add the button for adding to favourite
+    if (movie === 'movie') {
+        footer = footer + addToFavButton(element.id);
+    }
+
+    footer += `</div>`;
+    return footer;
+            
+    
+}
+
+//Method to create view for informations in the left side of footer of a movie detail
+//<param name="element">The details of the movie</param>
+function addLeftFooterSection(element){
+    return `<div class="d-block d-md-flex justify-content-start">`
+                + addItemPopularity(element.popularity) +
+            `</div>`;
+}
+
+function addItemPopularity(popularity){
+    
+}
+
+//Method for creating the add to favourites button
+//<param name="id">The id of the movie</param>
 function addToFavButton(id) {
-    return '<div class=\'w-100 d-flex justify-content-end\'>'
-        + '<button class=\'btn btn-primary\' onclick=addFavourite(' + id + ')>Add To Favourites</button>'
-        + '</div>';
-}
-
-function addRest(element){
-    return `<div class="d-none restDetails">
-                <p class="voteCount">` + element.voteCount + `</p>
-                <p class="video">` + element.video + `</p>
-                <p class="voteAverage">` + element.voteAverage + `</p>
-                <p class="popularity">` + element.popularity + `</p>
-                <p class="posterPath">` + element.posterPath + `</p>
-                <p class="adult">` + element.adult + `</p>
+    return `<div class="d-block d-md-flex justify-content-end">
+                <button class="btn btn-primary" onclick=addFavourite(` + id + `)>
+                    Add To Favourites
+                </button>
             </div>`;
 }
 //#endregion
