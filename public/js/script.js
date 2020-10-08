@@ -1,18 +1,30 @@
 // const DOMops = require('DOMops.js');
-let favouritesArray = [];
-let moviesArray = [];
 
+//array for tempoprarily storing all movies
+let moviesArray = [];
+//array for temporarily storing all favourite movies
+let favouritesArray = [];
+
+//Method for fetching all movies and populating them in the view
 function getMovies() {
     let moviesPromise = fetch('http://localhost:3000/movies');
 
+    //First trying to fetch the data and returning it as json
     return moviesPromise.then((data) => {
         return data.json();
     })
+    //When the data was successfully fetched the returned json is recieved here as response
     .then((response) => {
+        //Save the response as an array which represents the movies
         moviesArray = [...response];
+
+        //Add the movie elements in to the view
         addListUI('movie');
+
+        //Return the movies json list as response of the fetch operation
         return response;
     })
+    //If some error occurs at any point in the fetch operation, they are handled here
     .catch((error) => {
         console.log(error);
         error.message = 'Dummy error from server';
@@ -21,17 +33,27 @@ function getMovies() {
 
 }
 
+//Method for fetching all favourite movies and populating them in the view
 function getFavourites() {
     let favouritesPromise = fetch('http://localhost:3000/favourites');
 
+    //First trying to fetch the data and returning it as json
     return favouritesPromise.then((data) => {
         return data.json();
     })
+    //When the data was successfully fetched the returned json is recieved here as response
     .then((response) => {
+
+        //Save the response as an array which represents the favourites
         favouritesArray = [...response];
+
+        //Add the favourites elements in to the view
         addListUI('favourites');
+
+        //Return the movies json list as response of the fetch operation
         return response;
     })
+    //If some error occurs at any point in the fetch operation, they are handled here
     .catch((err) => {
         console.log(err);
         error.message = 'Dummy error from server';
@@ -39,15 +61,22 @@ function getFavourites() {
     });
 }
 
+//Method to add an item from movie list to favourites list
 function addFavourite(id) {
+
+    //Validating whether the selected movie was already added as favourite
     if(favouritesArray && favouritesArray.find(movie => movie.id === id)){
         alert('Movie is already added to favourites');
         throw new Error('Movie is already added to favourites');
     }
     else{
+        //Get the movie item with the provided id from the movies array
         let favMovie = moviesArray.find(movie => movie.id === id);
 
+        //If a valid movie was found
         if(favMovie){
+
+            //Creates a post fetch promise with the movie to be added as body
             let addFavPromise = fetch('http://localhost:3000/favourites',{
                 method: 'POST',
                 headers:{
@@ -56,6 +85,7 @@ function addFavourite(id) {
                 body: JSON.stringify(favMovie)
             });
 
+            //First trying to post the movie item to favourites
             return addFavPromise.then((data) => {
                 return data.json();
             })
