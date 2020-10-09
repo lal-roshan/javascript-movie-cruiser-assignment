@@ -96,11 +96,7 @@ function addFavourite(id) {
             })
             .then((response) => {
                 favouritesArray.push(response);
-                /*Commented because when adding a favourite the page refreshes and anyway the newly added one will be
-                populated in view using getFavourites.
-                So for avoiding same operation on DOM multiple times
-                // addListUI('favourites', append = true);
-                */
+                addListUI('favourites', append = true);
                 return favouritesArray;
             })
             //If any error occurs in between it will be handled here
