@@ -231,7 +231,7 @@ function addItemPopularity(popularity) {
 //<param name="voteAverage">Average votes of the movie</param>
 //<param name="voteCount">Number of votes for the movie</param>
 function addVotes(voteAverage, voteCount){
-    return `<div class="d-flex justify-content-start mb-3 w-100" title="Reviews">`
+    return `<div class="d-flex justify-content-start mb-3 w-100" title="Rating">`
                 + addVoteAverage(voteAverage)
                 + addVoteCount(voteCount) +
             `</div>`;
