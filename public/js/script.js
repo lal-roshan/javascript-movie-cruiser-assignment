@@ -11,18 +11,20 @@ function getMovies() {
 
     //First trying to fetch the data and returning it as json
     return moviesPromise.then((data) => {
-        return data.json();
+        if(data.ok){
+            return data.json();
+        }
     })
     //When the data was successfully fetched the returned json is recieved here as response
     .then((response) => {
-        //Save the response as an array which represents the movies
-        moviesArray = [...response];
+            //Save the response as an array which represents the movies
+            moviesArray = [...response];
 
-        //Add the movie elements in to the view
-        addListUI('movie');
+            //Add the movie elements in to the view
+            addListUI('movie');
 
-        //Return the movies json list as response of the fetch operation
-        return response;
+            //Return the movies json list as response of the fetch operation
+            return response;
     })
     //If some error occurs at any point in the fetch operation, they are handled here
     .catch((error) => {
@@ -30,7 +32,6 @@ function getMovies() {
         error.message = 'Dummy error from server';
         return error;
     });
-
 }
 
 //Method for fetching all favourite movies and populating them in the view
@@ -39,19 +40,20 @@ function getFavourites() {
 
     //First trying to fetch the data and returning it as json
     return favouritesPromise.then((data) => {
-        return data.json();
+        if(data.ok){
+            return data.json();
+        }
     })
     //When the data was successfully fetched the returned json is recieved here as response
     .then((response) => {
+            //Save the response as an array which represents the favourites
+            favouritesArray = [...response];
 
-        //Save the response as an array which represents the favourites
-        favouritesArray = [...response];
+            //Add the favourites elements in to the view
+            addListUI('favourites');
 
-        //Add the favourites elements in to the view
-        addListUI('favourites');
-
-        //Return the movies json list as response of the fetch operation
-        return response;
+            //Return the movi;es json list as response of the fetch operation
+            return response;
     })
     //If some error occurs at any point in the fetch operation, they are handled here
     .catch((err) => {
@@ -87,9 +89,18 @@ function addFavourite(id) {
             });
 
             //First trying to post the movie item to favourites and adding it to view if successful
-            return addFavPromise.then(() => {
-                favouritesArray.push(favMovie);
-                addListUI('favourites', append = true);
+            return addFavPromise.then((data) => {
+                if(data.ok){
+                    return data.json();
+                }
+            })
+            .then((response) => {
+                favouritesArray.push(response);
+                /*Commented because when adding a favourite the page refreshes and anyway the newly added one will be
+                populated in view using getFavourites.
+                So for avoiding same operation on DOM multiple times
+                // addListUI('favourites', append = true);
+                */
                 return favouritesArray;
             })
             //If any error occurs in between it will be handled here
@@ -100,6 +111,39 @@ function addFavourite(id) {
     }
 }
 
+//Method to delete an item from avourites list
+//<param name="id">Denotes the id of the movie that is to be deleted from favourites</param>
+function deleteFavourite(id) {
+
+    let favouriteIndex = favouritesArray.findIndex(movie => movie.id === id);
+    //Validating whether the selected movie was added as favourite
+    if (favouriteIndex === -1) {
+        alert('Movie is not added to favourites');
+        throw new Error('Movie is not added to favourites');
+    }
+    else {
+
+        //Creates a post fetch promise with the movie to be added as body
+        let addFavPromise = fetch('http://localhost:3000/favourites/' + id, {
+            method: 'DELETE'
+        });
+
+        //First trying to delete the movie item to favourites and adding it to view if successful
+        return addFavPromise.then((data) => {
+            if (data.ok) {
+                 return data.json();
+            }
+        })
+        .then(() => {
+            favouritesArray.splice(favouriteIndex,1);
+             return favouritesArray;
+        })
+         //If any error occurs in between it will be handled here
+        .catch((err) => {
+            return err;
+        });
+    }
+}
 
 //#region DOM part
 
@@ -181,9 +225,9 @@ function listItemOriginalInfo(originalTitle, originalLanguage) {
     return `<small class="text-muted d-inline-flex flex-wrap originalTitle" title="Original Title">`
                 + originalTitle +
             `</small>
-            <small class="text-muted text-uppercase ml-sm-1 originalLanguage" title="Original Language">(`
-                + originalLanguage +
-            `)</small>`;
+            <small class="text-muted text-uppercase ml-sm-1 originalLanguage" title="Original Language">
+                (` + originalLanguage + `)
+            </small>`;
 }
 
 //Method for creating view for release date of movie
@@ -211,9 +255,13 @@ function listItemFooter(element, category){
                 + addItemPopularity(element.popularity)
                 + addVotes(element.voteAverage, element.voteCount);
 
-    //if category is moview then we need to add the button for adding to favourite
+    //if category is movie then we need to add the button for adding to favourite
     if (category === 'movie') {
         footer = footer + addToFavButton(element.id);
+    }
+    //if category is not movie then we need to add the button for deleting from favourite
+    else{
+        footer = footer + addRemoveFavButton(element.id);
     }
     return footer;
 }
@@ -240,7 +288,7 @@ function addVotes(voteAverage, voteCount){
 //Method for creating view for star rating of the movie
 //<param name="voteAverage">Average votes of the movie</param>
 function addVoteAverage(voteAverage){
-    let rating = '<h5 class="mr-2">' + voteAverage.toFixed(2) +'</h5>';
+    let rating = '<h5 class="mr-2">' + voteAverage.toFixed(1) +'</h5>';
     let stars = '<div class="stars">';
     let average = 1;
     while (average <= 5){
@@ -271,9 +319,17 @@ function addVoteCount(voteCount) {
 //<param name="id">The id of the movie</param>
 function addToFavButton(id) {
     return `<div class="d-flex justify-content-end my-4 w-100">
-                <button class="btn btn-dark" onclick=addFavourite(` + id + `)>
+                <button class="btn btn-dark" onclick=addFavourite(` + id + `) title="Add to favourites">
                     Add To Favourites
                 </button>
+            </div>`;
+}
+
+//Method for creating the remove from favourites button
+//<param name="id">The id of the movie</param>
+function addRemoveFavButton(id){
+    return `<div class="d-flex justify-content-end my-4 w-100">
+                <span class="fas fa-trash text-danger h4" onclick=deleteFavourite(` + id + `) title="Remove from favourites"></span>
             </div>`;
 }
 //#endregion
@@ -287,6 +343,4 @@ module.exports = {
 // You will get error - Uncaught ReferenceError: module is not defined
 // while running this script on browser which you shall ignore
 // as this is required for testing purposes and shall not hinder
-// it's normal execution
-
-
+// it's normal execution*/

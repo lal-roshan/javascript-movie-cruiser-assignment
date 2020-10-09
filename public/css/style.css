@@ -44,3 +44,7 @@ i{
     width:1em;
     height: 1em;
 }
+
+.fa-trash{
+    cursor: pointer;
+}
